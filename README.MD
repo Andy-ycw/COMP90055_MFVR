@@ -6,3 +6,5 @@ pip install spacy==3.4.0
 pip install https://github.com/medianeuroscience/emfdscore/archive/master.zip
 python -m spacy download en_core_web_sm
 ```
+
+See `code_structure.MD` for what each script is for.

@@ -1,12 +1,12 @@
 Chronological Order of code development, along with functionality
 
 # Extraction of text from proquest data.
-proquest_text_parser.py <br>
+proquest_text_parser.py <br><br>
 text2json.ipynb <br>
     - Convert raw proquest text data to json. <br>
     - Manually coded pub_titles across states. <br>
     - Manually coded political stances of each pub_title. <br>
-    - Some analysis using eMFD on political stance, time series, and states. <br>
+    - Some analysis using eMFD on political stance, time series, and states. <br><br>
 wa2json.ipynb <br>
     - Use parser in proquest_text_parser.py to parse Factiva rtf, and output wa pickles. <br>
 
