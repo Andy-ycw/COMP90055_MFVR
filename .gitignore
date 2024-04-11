@@ -400,3 +400,4 @@ FodyWeavers.xsd
 # Data and paper folder
 data/
 Papers/
+.DS_Store
