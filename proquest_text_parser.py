@@ -357,7 +357,7 @@ class FactivaRtfParser:
                 pub = pub.strip()[2:-1].strip()
 
                 date = date_parser(pd, proquest=False)
-                article_id = f"{compute_initials(hd)}-{compute_initials(pub)}-{date}"
+                article_id = f"{compute_initials(hd)}-{date}"
                 output_dict[article_id] = {
                     'title': hd,
                     'text': " ".join(lp.split()) + " " + " ".join(td.split()),

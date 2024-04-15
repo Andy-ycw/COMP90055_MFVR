@@ -1,4 +1,4 @@
-Chronological Order of code development, along with functionality <br>
+Brief functionality descriptions of scripts in this repo. <br>
 The default tokenizer is mostly the default tokenizer in SpaCy. `en_core_web_sm` pipline is used in development. May switch to `en_core_web_trf` when desired. <br>
 
 # Extraction of text from proquest data.
@@ -31,8 +31,9 @@ annotation_prep.ipynb <br>
 #### Annotation guides
 Hoover 2020 and Trager 2022 <br>
 
-# Dictionary-based counting analysis
-count.ipynb - Computed moral foundation counts by specified aggregation with(out) token length normalisation.
+# Non semantic analyses
+### Dictionary-based counting analysis
+count.ipynb - Computed moral foundation counts by media aggregation with(out) token length normalisation.
 
 
 # temp
