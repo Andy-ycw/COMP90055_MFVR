@@ -113,6 +113,46 @@ def main_parser_proquest(dir, file_num, date):
     return raw_article_list
 
 def text2dict(raw_article_list):
+    target_media = (
+    # ABC assume national reach. 230 articles.
+    ('ABC Premium News; Sydney', 'neutral', 'national'),
+    ('7.30; Sydney', 'neutral', 'national'),
+
+    # ACT. 951 articles. But Australian prolly national reach.
+    ('The Australian (Online); Canberra, A.C.T.', 'right', 'national'),
+    ('The Canberra Times; Canberra, A.C.T.', 'left', 'ACT'),
+    
+    # NSW
+    ('News.com.au; Sydney, N.S.W.', 'right', 'national'),
+    ('Sydney Morning Herald; Sydney, N.S.W.', 'left', 'NSW'),
+    ('Sun-Herald; Sydney, N.S.W.', 'left', 'NSW'),
+    ('The Daily Telegraph (Online); Surrey Hills, N.S.W.', 'right', 'NSW'),
+
+    # VIC
+    ('The Age; Melbourne, Vic.', 'left', 'VIC'),
+    ('Herald Sun; Melbourne, Vic.', 'left', 'VIC'),
+    ('Sunday Age; Melbourne, Vic.', 'left', 'VIC'),
+
+    # SA
+    ('The Advertiser; Adelaide, S. Aust.', 'right', 'SA'),
+    
+    # QLD
+    ('The Courier - Mail; Brisbane, Qld.', 'right', 'QLD'),
+    ('The Cairns Post; Cairns, Qld.', 'right', 'QLD'),
+    
+    # NT
+    ('The Northern Territory News; Darwin, N.T.', 'unclear', 'NT'),
+
+    # TAS
+    ('Advocate; Burnie, Tas.', 'unclear', 'TAS'),
+    ('The Examiner; Launceston, Tas.', 'unclear', 'TAS'),
+    ('The Mercury (Online); Hobart Town', 'unclear', 'TAS'),
+
+    # WA
+    ('The West Australian', 'unclear', 'WA'),
+    ('WAToday.com.au', 'unclear', 'WA')
+    )
+
     pattern_text = re.compile(r'(.+?)Title:\s', re.DOTALL)
     pattern_title = re.compile(r'\nTitle:\s(.+)\n')
     pattern_date = re.compile(r'\nPublication\sdate:\s(.+)\n')
@@ -145,14 +185,16 @@ def text2dict(raw_article_list):
             # AttributeError indicates that abnormal format leading to unexpected parsing.
             date = None
 
-        # Publisher 
-        match = pattern_publisher.search(raw_text)
-        publisher = match.group(1) if match else None
-        
         # Publication title 
         match = pattern_pub_title.search(raw_text)
         pub_title = match.group(1) if match else None
-        # pub_title_set.add(pub_title)
+        # Skip articles not from the mainstream media.
+        if pub_title not in [media_info[0] for media_info in target_media]:
+            continue
+
+        # Publisher 
+        match = pattern_publisher.search(raw_text)
+        publisher = match.group(1) if match else None
 
         # Source type 
         match = pattern_source.search(raw_text)
@@ -167,8 +209,8 @@ def text2dict(raw_article_list):
         date_element = date if date else "_"
         pub_title_element = compute_initials(pub_title) if pub_title else "_"
     
-        id = title_initials + "-" + pub_title_element + "-" + date_element # Gives larger corpus.
-        # id = title_initials +  "-" + date_element 
+        # id = title_initials + "-" + pub_title_element + "-" + date_element # Gives larger corpus.
+        id = title_initials +  "-" + date_element 
         
         if id not in master_dict:
             master_dict[id] = dict()
@@ -183,6 +225,45 @@ def text2dict(raw_article_list):
     return master_dict
 
 class FactivaRtfParser:
+    target_media = (
+    # ABC assume national reach. 230 articles.
+    ('ABC Premium News; Sydney', 'neutral', 'national'),
+    ('7.30; Sydney', 'neutral', 'national'),
+
+    # ACT. 951 articles. But Australian prolly national reach.
+    ('The Australian (Online); Canberra, A.C.T.', 'right', 'national'),
+    ('The Canberra Times; Canberra, A.C.T.', 'left', 'ACT'),
+    
+    # NSW
+    ('News.com.au; Sydney, N.S.W.', 'right', 'national'),
+    ('Sydney Morning Herald; Sydney, N.S.W.', 'left', 'NSW'),
+    ('Sun-Herald; Sydney, N.S.W.', 'left', 'NSW'),
+    ('The Daily Telegraph (Online); Surrey Hills, N.S.W.', 'right', 'NSW'),
+
+    # VIC
+    ('The Age; Melbourne, Vic.', 'left', 'VIC'),
+    ('Herald Sun; Melbourne, Vic.', 'left', 'VIC'),
+    ('Sunday Age; Melbourne, Vic.', 'left', 'VIC'),
+
+    # SA
+    ('The Advertiser; Adelaide, S. Aust.', 'right', 'SA'),
+    
+    # QLD
+    ('The Courier - Mail; Brisbane, Qld.', 'right', 'QLD'),
+    ('The Cairns Post; Cairns, Qld.', 'right', 'QLD'),
+    
+    # NT
+    ('The Northern Territory News; Darwin, N.T.', 'unclear', 'NT'),
+
+    # TAS
+    ('Advocate; Burnie, Tas.', 'unclear', 'TAS'),
+    ('The Examiner; Launceston, Tas.', 'unclear', 'TAS'),
+    ('The Mercury (Online); Hobart Town', 'unclear', 'TAS'),
+
+    # WA
+    ('The West Australian', 'unclear', 'WA'),
+    ('WAToday.com.au', 'unclear', 'WA')
+    )
 
     def __init__(self):
        self.pattern_dict = {
@@ -207,6 +288,19 @@ class FactivaRtfParser:
                 match = matches[i]
                 raw_content = match.group(1)
 
+                # Extract raw text for from the SN row - pub_title
+                for j in range(len(self.pattern_dict["SN"])):
+                    match_SN = [match for match in self.pattern_dict["SN"][j].findall(raw_content)]
+                    if len(match_SN) == 0:
+                        continue
+                    else:
+                        break
+                assert len(match_SN) == 1, (f"Sth wrong with parsing PD, match len = {len(match_SN)}, i = {i}\n content = {raw_content}")
+                sn = re.sub(self.pattern_dict['sub'], " ", match_SN[0])
+                sn = sn.strip()[2:-1].strip()
+                if sn not in [media_info[0] for media_info in self.target_media]:
+                    continue
+
                 # Extract raw text for from the HD row - title
                 for j in range(len(self.pattern_dict["HD"])):
                     match_HD = [match for match in self.pattern_dict["HD"][j].findall(raw_content)]
@@ -228,17 +322,6 @@ class FactivaRtfParser:
                 assert len(match_PD) == 1, (f"Sth wrong with parsing PD, match len = {len(match_PD)}, i = {i}\n content = {raw_content}")
                 pd = re.sub(self.pattern_dict['sub'], " ", match_PD[0])
                 pd = pd.strip()[2:-1].strip()
-
-                # Extract raw text for from the SN row - pub_title
-                for j in range(len(self.pattern_dict["SN"])):
-                    match_SN = [match for match in self.pattern_dict["SN"][j].findall(raw_content)]
-                    if len(match_SN) == 0:
-                        continue
-                    else:
-                        break
-                assert len(match_SN) == 1, (f"Sth wrong with parsing PD, match len = {len(match_SN)}, i = {i}\n content = {raw_content}")
-                sn = re.sub(self.pattern_dict['sub'], " ", match_SN[0])
-                sn = sn.strip()[2:-1].strip()
 
                 # Extract raw text for from the LP row - leads of article
                 for j in range(len(self.pattern_dict["LP"])):

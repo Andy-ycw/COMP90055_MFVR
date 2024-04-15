@@ -26,10 +26,13 @@ sma_tools.py <br>
 # Annotation
 #### Sampling method - DDR + GloVe
 ddr.py <br>
-annotation.ipynb <br>
+annotation_prep.ipynb <br>
 
 #### Annotation guides
 Hoover 2020 and Trager 2022 <br>
+
+# Dictionary-based counting analysis
+count.ipynb - Computed moral foundation counts by specified aggregation with(out) token length normalisation.
 
 
 # temp
