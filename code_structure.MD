@@ -1,4 +1,5 @@
-Chronological Order of code development, along with functionality
+Chronological Order of code development, along with functionality <br>
+The default tokenizer is mostly the default tokenizer in SpaCy. `en_core_web_sm` pipline is used in development. May switch to `en_core_web_trf` when desired. <br>
 
 # Extraction of text from proquest data.
 proquest_text_parser.py <br><br>
@@ -14,25 +15,25 @@ wa2json.ipynb <br>
 LDA.ipynb <br>
 
 # Semantic axes building
-## Detect positions of moral words and sentences in each article
+#### Detect positions of moral words and sentences in each article
 pickMFU.py <br>
-locate_mf.ipynb
+locate_mf.ipynb <br>
 
-## BERT Pipeline
+#### BERT Pipeline
 make_sma.ipynb <br>
-sma_tools.py
+sma_tools.py <br>
 
 # Annotation
-## Sampling strategy
-DDR + GloVe - 95 percentile <br>
-Additional requirements? (state, ...)
+#### Sampling method - DDR + GloVe
+ddr.py <br>
+annotation.ipynb <br>
 
-## Annotation guides
-Hoover 2020 and Trager 2022
+#### Annotation guides
+Hoover 2020 and Trager 2022 <br>
 
 
 # temp
 mfrc_rough_count.ipynb <br>
 tmp.py - for checking counts of mfd and mfd2 <br>
 transcript_analysis.ipynb - Analyse the transcript that Kat sent. <br> 
-paragraph_analysis - Analyse paragraph and article in terms of moral foundation signal. <br>
+paragraph_analysis - Check paragraph lengths. <br>
