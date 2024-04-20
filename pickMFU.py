@@ -25,11 +25,12 @@ class MFU_picker:
         2. An index list in which indices point to sentences with moral foundation words.
         3. A nested list of token indices which point to the positions of moral foundation words.
         4. A nested list of virtue-vice
+        5. A nested list of matched word
         """
         
         assert mfd_ver in self.mdf_version
 
-        result = [[], [], [], []]
+        result = [[], [], [], [], []]
         
         # Spacy pipeline - doc level
         doc = self.nlp(text)
@@ -38,7 +39,7 @@ class MFU_picker:
         sent_list = [sent_obj.text for sent_obj in doc.sents]        
         for i in range(len(sent_list)):
             sent = re.sub(r"[\n\xa0]", "", sent_list[i]).strip()
-            token_list = self.tokenizer.tokenize(sent) if self.tokenizer else sent.split()
+            token_list = self.tokenizer.tokenize(sent) if self.tokenizer else [re.sub(r'[\W]','',word) for word in sent.split()]
             sent = " ".join(token_list)
 
             # Start generating and formating output data
@@ -46,6 +47,7 @@ class MFU_picker:
             isSentAppend = False
             token_indices = list()
             virtue_vice_indices = list()
+            word_list = list()
 
             for j in range(len(token_list)):
                 word = token_list[j]
@@ -56,6 +58,7 @@ class MFU_picker:
                                 result[1].append(i)
                             token_indices.append(j)
                             virtue_vice_indices.append(self.mfd[v])
+                            word_list.append(word)
                             isSentAppend = True
                 else:
                     match_condition = word in self.mdf2_keys if mfd_ver == "mfd2" else word in self.emdf_keys
@@ -66,9 +69,11 @@ class MFU_picker:
                         if mfd_ver == "mfd2":
                             virtue_vice_indices.append(self.mfd2[word]) # emfd does not need.
                         isSentAppend = True
+                        word_list.append(word)
 
             if len(token_indices) != 0:
                 result[2].append(token_indices)
                 result[3].append(virtue_vice_indices)
+                result[4].append(word_list)
         
         return result
