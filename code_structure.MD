@@ -25,8 +25,11 @@ sma_tools.py <br>
 
 # Annotation
 #### Sampling method - DDR + GloVe
+annotation_data_model.py - Class to read excel files.
+annotation_candidate_validatoin.ipynb - Validate candidate selection method (Both article and paragraph levels)
 ddr.py <br>
 annotation_prep.ipynb <br>
+count.ipynb - Combine results from all searches (Removed duplicates and discover identical articles across media.)<br>
 
 #### Annotation guides
 Hoover 2020 and Trager 2022 <br>
