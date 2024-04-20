@@ -87,7 +87,8 @@ class DDR:
                     float(line_context[1])
                     position_dict[token] = position
                 except ValueError: # Skip abnormal tokens.
-                    print("Abnormal tokens: ", line_context[:50])
+                    # print("Abnormal tokens: ", line_context[:50])
+                    pass
                 finally:
                     position = f.tell() 
                     line = f.readline()
