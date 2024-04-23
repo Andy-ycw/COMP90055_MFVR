@@ -112,7 +112,7 @@ def main_parser_proquest(dir, file_num, date):
     
     return raw_article_list
 
-def text2dict(raw_article_list):
+def text2dict(raw_article_list, remove_duplicate=True):
     target_media = (
     # ABC assume national reach. 230 articles.
     ('ABC Premium News; Sydney', 'neutral', 'national'),
@@ -123,7 +123,7 @@ def text2dict(raw_article_list):
     ('The Canberra Times; Canberra, A.C.T.', 'left', 'ACT'),
     
     # NSW
-    ('News.com.au; Sydney, N.S.W.', 'right', 'national'),
+    # ('News.com.au; Sydney, N.S.W.', 'right', 'national'),
     ('Sydney Morning Herald; Sydney, N.S.W.', 'left', 'NSW'),
     ('Sun-Herald; Sydney, N.S.W.', 'left', 'NSW'),
     ('The Daily Telegraph (Online); Surrey Hills, N.S.W.', 'right', 'NSW'),
@@ -138,7 +138,7 @@ def text2dict(raw_article_list):
     
     # QLD
     ('The Courier - Mail; Brisbane, Qld.', 'right', 'QLD'),
-    ('The Cairns Post; Cairns, Qld.', 'right', 'QLD'),
+    # ('The Cairns Post; Cairns, Qld.', 'right', 'QLD'),
     
     # NT
     ('The Northern Territory News; Darwin, N.T.', 'unclear', 'NT'),
@@ -208,9 +208,16 @@ def text2dict(raw_article_list):
         title_initials = compute_initials(title)
         date_element = date if date else "_"
         pub_title_element = compute_initials(pub_title) if pub_title else "_"
+
+        # Load media info
+        for i in range(len(target_media)):
+            pub_title_instance = target_media[i][0]
+            if pub_title == pub_title_instance:
+                edit_stance = target_media[i][1]
+                state = target_media[i][2]
     
         # id = title_initials + "-" + pub_title_element + "-" + date_element # Gives larger corpus.
-        id = title_initials +  "-" + date_element 
+        id = title_initials +  "-" + date_element if remove_duplicate else title_initials + "-" + pub_title_element + "-" + date_element + "-" + state
         
         if id not in master_dict:
             master_dict[id] = dict()
@@ -219,6 +226,8 @@ def text2dict(raw_article_list):
             master_dict[id]['date'] = date
             master_dict[id]['publisher'] = publisher
             master_dict[id]['pub_title'] = pub_title
+            master_dict[id]['edit_stance'] = edit_stance
+            master_dict[id]['state'] = state
             master_dict[id]['source'] = source
             master_dict[id]['doc'] = doc
         
@@ -235,7 +244,7 @@ class FactivaRtfParser:
     ('The Canberra Times; Canberra, A.C.T.', 'left', 'ACT'),
     
     # NSW
-    ('News.com.au; Sydney, N.S.W.', 'right', 'national'),
+    # ('News.com.au; Sydney, N.S.W.', 'right', 'national'),
     ('Sydney Morning Herald; Sydney, N.S.W.', 'left', 'NSW'),
     ('Sun-Herald; Sydney, N.S.W.', 'left', 'NSW'),
     ('The Daily Telegraph (Online); Surrey Hills, N.S.W.', 'right', 'NSW'),
@@ -250,7 +259,7 @@ class FactivaRtfParser:
     
     # QLD
     ('The Courier - Mail; Brisbane, Qld.', 'right', 'QLD'),
-    ('The Cairns Post; Cairns, Qld.', 'right', 'QLD'),
+    # ('The Cairns Post; Cairns, Qld.', 'right', 'QLD'),
     
     # NT
     ('The Northern Territory News; Darwin, N.T.', 'unclear', 'NT'),
@@ -277,7 +286,7 @@ class FactivaRtfParser:
             'sub': r'\\.+?\s'
         }
 
-    def parse(self, rtf_path: str) -> List[str]:
+    def parse(self, rtf_path: str, remove_duplicate: bool = True) -> List[str]:
         output_dict = dict() # Match the format with the pickled proquest data.
         with open(rtf_path, 'r') as f:
             text = f.read()
@@ -356,14 +365,23 @@ class FactivaRtfParser:
                 pub = re.sub(self.pattern_dict['sub'], " ", match_PUB[0])
                 pub = pub.strip()[2:-1].strip()
 
+                # Load media info 
+                for i in range(len(self.target_media)):
+                    pub_title_instance = self.target_media[i][0]
+                    if sn == pub_title_instance:
+                        edit_stance = self.target_media[i][1]
+                        state = self.target_media[i][2]
+
                 date = date_parser(pd, proquest=False)
-                article_id = f"{compute_initials(hd)}-{date}"
+                article_id = f"{compute_initials(hd)}-{date}" if remove_duplicate else f"{compute_initials(hd)}-{compute_initials(sn)}-{date}-{state}"
                 output_dict[article_id] = {
                     'title': hd,
                     'text': " ".join(lp.split()) + " " + " ".join(td.split()),
                     'date': date,
                     'publisher': pub,
                     'pub_title': sn,
+                    'edit_stance': edit_stance,
+                    'state': state,
                     'source': '',
                     'doc': ''
                 }

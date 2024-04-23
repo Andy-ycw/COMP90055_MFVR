@@ -1,9 +1,12 @@
 from typing import *
 import spacy
 import re
+from ddr import DDR
+from collections import defaultdict
+import numpy as np
 
 # This load dictionaries to variables mfd, mfd2 and emfd; mfd_regex
-from emfdscore.load_mfds import mfd2, emfd_single_vice_virtue, mfd_regex, mfd
+from emfdscore.load_mfds import mfd2, emfd_single_vice_virtue, mfd_regex, mfd, emfd
 
 class MFU_picker:
 
@@ -77,3 +80,86 @@ class MFU_picker:
                 result[4].append(word_list)
         
         return result
+
+class DataFrame_MF_Wrapper:
+    moral_foundations = ['care', 'fairness', 'authority', 'loyalty', 'sanctity']
+    moral_directions = ['virtue', 'vice']
+
+    def __init__(self, df, spacy_pipeline='en_core_web_sm'):
+        # self.nlp = spacy.load(spacy_pipeline)
+        self.mfu_picker = MFU_picker()
+        # self.ddr = DDR()
+        self.df = df        
+
+    def compute_mfd_score(self, mfd_ver):
+        mfd_vers = ['mfd', 'mfd2', 'emfd']
+        assert mfd_ver in mfd_vers, print(f'Unsupported mfd version: {mfd_ver}')
+        self.mfd_picker_wrapper.__func__.__defaults__ = (mfd_ver,)
+        df = self.df.copy()
+
+        df[f'{mfd_ver}_count_info'] = df['text'].apply(self.mfd_picker_wrapper)
+        for mf in self.moral_foundations:
+            for mf_dir in self.moral_directions:
+                mf_axis = mf+'.'+mf_dir
+                df[mf_axis] = df[f'{mfd_ver}_count_info'].apply(lambda x: x[0][mf_axis])
+        df[f'{mfd_ver}_match'] = df[f'{mfd_ver}_count_info'].apply(lambda x: x[1])
+
+        return df
+    
+    # def compute_cosine(self):
+    #     df = self.df.copy()
+    #     df['raw_ddr'] = df['text'].apply(self.ddr.compute_similarity)
+    #     for mf in self.moral_foundations:
+    #         df[f'{mf}_virtue'] = df['raw_ddr'].apply(lambda x: x[f'{mf}.virtue'])
+    #         df[f'{mf}_vice'] = df['raw_ddr'].apply(lambda x: x[f'{mf}.vice'])
+    #         df[mf] = df['raw_ddr'].apply(lambda x: max(x[f'{mf}.virtue'], x[f'{mf}.vice']))
+    #     return df
+
+    def mfd_picker_wrapper(self, sent, mfd_ver='mfd'):
+        # This wrapper aims to extract the count of mfd match of output from pickMFU() with mfd_ver =  'mfd'.
+        # mfd_ver = 'mfd'
+        mf_score_dict = defaultdict(float)
+        raw_result = self.mfu_picker.pickMFU(sent, mfd_ver)
+        foundation_info = raw_result[3]
+        matched_words_raw = raw_result[4]
+
+        if mfd_ver != 'emfd':
+            mf_found = [
+                foundation # i.e. 'care.virtue'
+                for sent_level in foundation_info
+                for word_level in sent_level
+                for foundation in word_level
+            ] if mfd_ver == 'mfd' else [
+                foundation
+                for sent_level in foundation_info
+                for word_level in sent_level
+                for foundation in word_level.values()
+            ]
+        
+        matched_words = [
+            word
+            for sent_level in matched_words_raw
+            for word in sent_level
+        ] if len(matched_words_raw) != 0 else None
+
+        if mfd_ver!='emfd':
+            mf_axes = [
+                mf+'.'+mf_dir
+                for mf in self.moral_foundations
+                for mf_dir in self.moral_directions
+            ]
+            for mf in mf_found:
+                if mf in mf_axes:
+                    mf_score_dict[mf] += 1
+        else: 
+            if matched_words is not None:
+                for mf in self.moral_foundations:
+                    for word in matched_words:
+                        foundation_prob = emfd[word][f'{mf}_p']
+                        foundation_sent = emfd[word][f'{mf}_sent']
+                        mf_dir = 'virtue' if foundation_sent > 0 else 'vice'
+                        mf_axis = mf+'.'+mf_dir
+                        mf_score_dict[mf_axis] += foundation_prob + foundation_sent
+        
+        return mf_score_dict, matched_words
+
