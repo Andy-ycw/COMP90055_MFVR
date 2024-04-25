@@ -159,7 +159,8 @@ class DataFrame_MF_Wrapper:
                         foundation_sent = emfd[word][f'{mf}_sent']
                         mf_dir = 'virtue' if foundation_sent > 0 else 'vice'
                         mf_axis = mf+'.'+mf_dir
-                        mf_score_dict[mf_axis] += foundation_prob + foundation_sent
+                        # mf_score_dict[mf_axis] += foundation_prob + foundation_sent
+                        mf_score_dict[mf_axis] += foundation_prob
         
         return mf_score_dict, matched_words
 
